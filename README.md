@@ -31,6 +31,11 @@ NOTE: Create directories if they do not exist!
 
 Or, take the zip file in the release assets and unzip into the Lua directory.
 
+## Changelog
+
+* 0.1 - initial version with pausing only at 50% duration of playing item
+* 0.2 - fix issue when running on a brand new install of vlc
+
 ## Acknowledgements
 
 * https://vlc.verg.ca/
