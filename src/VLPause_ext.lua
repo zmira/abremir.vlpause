@@ -171,8 +171,12 @@ function initialize_gui()
 
     local selected_option = nil
     local bookmark = get_vlpause_bookmark()
+
     if string.len(bookmark or "") > 0 then
-        selected_option = vlpause_options[tonumber(string.sub(vlc.config.get(bookmark), string.len("VLPAUSE=") + 1))]
+        local bookmark_value = vlc.config.get(bookmark) or ""
+        if starts_with(bookmark_value, "VLPAUSE=") then
+            selected_option = vlpause_options[tonumber(string.sub(bookmark_value, string.len("VLPAUSE=") + 1))]
+        end
     end
 
     vlpause_dialog:add_label("Configured option:", 1, 5, 4, 2)
@@ -196,7 +200,6 @@ function get_formatted_duration()
     end
 
     local duration = item:duration()
-    log_info("Raw item duration is: " .. duration)
     if duration > 0 then
         duration = time_to_string(duration)	
     end
@@ -227,11 +230,13 @@ function get_vlpause_bookmark()
         local bookmark = "bookmark" .. index
         local bookmark_value = vlc.config.get(bookmark)
 
-        if string.len(temp_vlpause_bookmark) == 0 and string.len(bookmark_value or "") == 0 then
+        if string.len(temp_vlpause_bookmark) == 0
+            and string.len(bookmark_value or "") == 0 then
             temp_vlpause_bookmark = bookmark
         end
 
-        if string.len(bookmark_value or "") > 0 and starts_with(bookmark_value, "VLPAUSE=") then
+        if string.len(bookmark_value or "") > 0
+            and starts_with(bookmark_value, "VLPAUSE=") then
             vlpause_bookmark = bookmark
             break
         end
