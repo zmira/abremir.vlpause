@@ -26,18 +26,6 @@ INSTALLATION directory (\lua\extensions\):
 Create directory if it does not exist!
 --]]----------------------------------------
 
---[[
-https://vlc.verg.ca/
-https://github.com/GDoux/Perroquet-Subtitles-for-VLC
-time_to_string() - Time v3.2 (c) lubozle [https://addons.videolan.org/p/1154032/]
-starts_with() - lua-users wiki - String Recipies [http://lua-users.org/wiki/StringRecipes]
-]]--
-
---[[
-CHANGELOG:
-0.1 : initial version with pause to happen only at 50% duration of playing item
---]]
-
 local vlpause_options = { "Never", "Halfway (50%)" }
 local intf_tag = "VLPause_intf"
 
