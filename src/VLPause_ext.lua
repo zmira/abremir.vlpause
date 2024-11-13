@@ -32,7 +32,7 @@ local intf_tag = "VLPause_intf"
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.1";
+        version = "0.3";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
