@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.1 ------------
+--[[-------------- VLPause v0.3 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_ext.lua" > Put the VLC Extension Lua script file in \lua\extensions\ folder
@@ -6,7 +6,7 @@ Requires "VLPause_ext.lua" > Put the VLC Extension Lua script file in \lua\exten
 Simple instructions:
 1) "VLPause_ext.lua" > Copy the VLC Extension Lua script file into \lua\extensions\ folder;
 2) "VLPause_intf.lua" > Copy the VLC Interface Lua script file into \lua\intf\ folder;
-3) Start the Extension in VLC menu "View > VLPause 0.1 (intf)" on Windows/Linux or "Vlc > Extensions > VLPause 0.1 (intf)" on Mac and configure to your liking.
+3) Start the Extension in VLC menu "View > VLPause" on Windows/Linux or "Vlc > Extensions > VLPause" on Mac and configure to your liking.
 
 Alternative activation of the Interface script:
 * The Interface script can be activated from the CLI (batch script or desktop shortcut icon):
