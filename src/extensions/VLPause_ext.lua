@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.1 ------------
+--[[-------------- VLPause v0.3 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -6,7 +6,7 @@ Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf
 Simple instructions:
 1) "VLPause_ext.lua" > Copy the VLC Extension Lua script file into \lua\extensions\ folder;
 2) "VLPause_intf.lua" > Copy the VLC Interface Lua script file into \lua\intf\ folder;
-3) Start the Extension in VLC menu "View > VLPause 0.1 (intf)" on Windows/Linux or "Vlc > Extensions > VLPause 0.1 (intf)" on Mac and configure to your liking.
+3) Start the Extension in VLC menu "View > VLPause" on Windows/Linux or "Vlc > Extensions > VLPause" on Mac and configure to your liking.
 
 Alternative activation of the Interface script:
 * The Interface script can be activated from the CLI (batch script or desktop shortcut icon):
@@ -26,13 +26,14 @@ INSTALLATION directory (\lua\extensions\):
 Create directory if it does not exist!
 --]]----------------------------------------
 
-local vlpause_options = { "Never", "Halfway (50%)" }
+local vlpause_options
+local vlpause_option_brackets
 local intf_tag = "VLPause_intf"
 
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.1";
+        version = "0.3";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
@@ -48,6 +49,7 @@ end
 function activate()
     os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
+    initialize_vlpause_options()
     local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
 
     if not luaintf_index or VLC_luaintf ~= intf_tag then 
@@ -55,6 +57,22 @@ function activate()
     else 
         trigger_menu(1) 
     end
+end
+
+function deactivate()
+    vlc.deactivate()
+end
+
+function initialize_vlpause_options()
+    vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)" }
+    vlpause_option_brackets = {     -- all values in seconds, mapped to the index
+        {0.00*60*60, 1.25*60*60}, -- [00h00m .. 01h15m[ => 0 (Never)
+        {1.25*60*60, 2.25*60*60}, -- [01h15m .. 02h15m[ => 1 (50%)
+        {2.25*60*60, 3.25*60*60}, -- [02h15m .. 03h15m[ => 2 (33%)
+        {3.25*60*60, 4.25*60*60}, -- [03h15m .. 04h15m[ => 3 (25%)
+        {4.25*60*60, 5.25*60*60}, -- [04h15m .. 05h15m[ => 4 (20%)
+        {5.25*60*60, math.huge}   -- [05h15m .. #INF[   => 5 (17%)
+    }
 end
 
 function close()
@@ -74,15 +92,18 @@ function trigger_menu(id)
 end
 
 function initialize_gui_intf()
-    vlpause_dialog = vlc.dialog(descriptor().title .. " v" .. descriptor().version)
+    vlpause_dialog = vlc.dialog(descriptor().title)
     
-    enable_extraintf = vlpause_dialog:add_check_box("Enable interface: ", true,1,1,1,1)
-    name_luaintf = vlpause_dialog:add_text_input(intf_tag,2,1,2,1)
-    vlpause_dialog:add_button("SAVE", click_save_settings,1,2,1,1)
-    vlpause_dialog:add_button("CANCEL", click_cancel_settings,2,2,1,1)
+    enable_extraintf = vlpause_dialog:add_check_box("Enable interface: ", true, 1, 1, 2, 2)
+    name_luaintf = vlpause_dialog:add_text_input(intf_tag, 3, 1, 2, 2)
+
+    vlpause_dialog:add_button("Save", click_save_settings, 3, 3, 1, 2)
+    vlpause_dialog:add_button("Cancel", click_cancel_settings, 4, 3, 1, 2)
 
     local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
-    lb_message = vlpause_dialog:add_label("Current status: " .. (luaintf_index and "ENABLED" or "DISABLED") .. " " .. tostring(VLC_luaintf),1,3,3,1)
+    lb_message = vlpause_dialog:add_label("Current status: " .. (luaintf_index and "ENABLED" or "DISABLED") .. " " .. tostring(VLC_luaintf), 1, 5, 4, 2)
+
+    add_copyright_to_vlpause_dialog(1, 7, 4, 2)
 
     vlpause_dialog:show()
 end
@@ -116,9 +137,9 @@ function get_vlc_intf_settings()
     local luaintf_index = false
     if VLC_extraintf then
         intf_table = split_string(VLC_extraintf, ":")
-        for i,v in ipairs(intf_table) do
-            if v == "luaintf" then
-                luaintf_index = i
+        for index, value in ipairs(intf_table) do
+            if value == "luaintf" then
+                luaintf_index = index
                 break
             end
         end
@@ -146,13 +167,16 @@ function split_string(s, d)
 end
 
 function initialize_gui()
-    vlpause_dialog = vlc.dialog(descriptor().title .. " v" .. descriptor().version)
+    vlpause_dialog = vlc.dialog(descriptor().title)
 
     vlpause_dialog:add_label("Total time:", 1, 1, 4, 2)
     vlpause_dialog:add_label(get_formatted_duration(), 5, 1, 4, 2)
-    vlpause_dialog:add_label("Pause:", 1, 3, 4, 2)
 
-    vlpause_dropdown = vlpause_dialog:add_dropdown(5, 3, 4, 2)
+    vlpause_dialog:add_label("Suggested # of intermissions:", 1, 3, 4, 2)
+    vlpause_dialog:add_label(get_suggested_number_of_intermissions(), 5, 3, 4, 2)
+
+    vlpause_dialog:add_label("# of intermissions:", 1, 5, 4, 2)
+    vlpause_dropdown = vlpause_dialog:add_dropdown(5, 5, 4, 2)
     for index, value in pairs(vlpause_options) do
         vlpause_dropdown:add_value(value, index)
     end
@@ -167,16 +191,39 @@ function initialize_gui()
         end
     end
 
-    vlpause_dialog:add_label("Configured option:", 1, 5, 4, 2)
-    vlpause_status_label = vlpause_dialog:add_label(selected_option or "---", 5, 5, 4, 2)
+    vlpause_dialog:add_label("Configured option:", 1, 7, 4, 2)
+    vlpause_status_label = vlpause_dialog:add_label(selected_option or "---", 5, 7, 4, 2)
 
-    vlpause_dialog:add_button("Cancel", click_cancel, 3, 7, 3, 2)
-    vlpause_dialog:add_button("Apply", click_apply, 6, 7, 3, 2)
+    vlpause_dialog:add_button("Apply", click_apply, 5, 9, 2, 2)
+    vlpause_dialog:add_button("Cancel", click_cancel, 7, 9, 2, 2)
 
-    vlpause_dialog:add_label("", 1, 9, 8, 2)
-    vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024 " .. descriptor().author, 1, 11, 8, 2)
+    add_copyright_to_vlpause_dialog(1, 11, 8, 2)
 
     vlpause_dialog:show()
+end
+
+function add_copyright_to_vlpause_dialog(column, row, hspan, vspan)
+    vlpause_dialog:add_label("", column, row, hspan, vspan)
+    vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024 " .. descriptor().author, column, row + 2, hspan, vspan)
+end
+
+function get_suggested_number_of_intermissions()
+    local item = vlc.input.item()
+
+    if not item then
+        return "---"
+    end
+
+    local duration = item:duration() -- in seconds
+    local duration_bracket
+    for index, value in pairs(vlpause_option_brackets) do
+        if duration >= value[1] and duration < value[2] then
+            duration_bracket = index
+            break
+        end
+    end
+
+    return vlpause_options[duration_bracket] or "---"
 end
 
 function get_formatted_duration()
@@ -187,10 +234,11 @@ function get_formatted_duration()
         return duration
     end
 
-    local duration = item:duration()
+    local duration = item:duration() -- in seconds
     if duration > 0 then
         duration = time_to_string(duration)	
     end
+
     return duration
 end
 
@@ -214,7 +262,7 @@ function get_vlpause_bookmark()
     local vlpause_bookmark = ""
     local temp_vlpause_bookmark = ""
 
-    for index = 1, 10, 1 do
+    for index = 1, 10 do
         local bookmark = "bookmark" .. index
         local bookmark_value = vlc.config.get(bookmark)
 
@@ -243,25 +291,38 @@ end
 
 -- from Time v3.2 (c) lubozle [https://addons.videolan.org/p/1154032/]
 function time_to_string(timestamp, timeformat, ms, hm) -- seconds, 0/1/2/3/4, true/false, true/false
-    if not timeformat then timeformat=0 end
-    local msp=(ms and "%06.3f" or "%02d") -- seconds.milliseconds formatting pattern
-    if timeformat==0 then
-        if timestamp/60<1 then timeformat=1
-        elseif timestamp/3600<1 then timeformat=2
-        elseif timestamp/86400<1 then timeformat=3
-        else timeformat=4
+    if not timeformat then
+        timeformat = 0
+    end
+
+    local msp = (ms and "%06.3f" or "%02d") -- seconds.milliseconds formatting pattern
+    if timeformat == 0 then
+        if timestamp/60 < 1 then
+            timeformat = 1
+        elseif timestamp/3600 < 1 then
+            timeformat = 2
+        elseif timestamp/86400 < 1 then
+            timeformat = 3
+        else
+            timeformat = 4
         end
     end
-    if hm then msp="" if timeformat<3 then timeformat=3 end end
 
-    if timeformat==3 then -- H:m:s,ms
-        return string.format("%02d:%02d:"..msp, math.floor(timestamp/3600), math.floor(timestamp/60)%60, timestamp%60):gsub("%.",","):gsub(":$","")
-    elseif timeformat==2 then -- M:s,ms
-        return string.format("%02d:"..msp, math.floor(timestamp/60), timestamp%60):gsub("%.",",")
-    elseif timeformat==1 then -- S,ms
+    if hm then
+        msp = ""
+        if timeformat < 3 then
+            timeformat = 3
+        end
+    end
+
+    if timeformat == 3 then -- H:m:s,ms
+        return string.format("%02d:%02d:" .. msp, math.floor(timestamp/3600), math.floor(timestamp/60)%60, timestamp%60):gsub("%.",","):gsub(":$","")
+    elseif timeformat == 2 then -- M:s,ms
+        return string.format("%02d:" .. msp, math.floor(timestamp/60), timestamp%60):gsub("%.",",")
+    elseif timeformat == 1 then -- S,ms
         return string.format(msp, timestamp):gsub("%.",",")
-    elseif timeformat==4 then -- D/h:m:s,ms
-        return string.format("%d/%02d:%02d:"..msp, math.floor(timestamp/(24*60*60)), math.floor(timestamp/(60*60))%24, math.floor(timestamp/60)%60, timestamp%60):gsub("%.",","):gsub(":$","")
+    elseif timeformat == 4 then -- D/h:m:s,ms
+        return string.format("%d/%02d:%02d:" .. msp, math.floor(timestamp/(24*60*60)), math.floor(timestamp/(60*60))%24, math.floor(timestamp/60)%60, timestamp%60):gsub("%.",","):gsub(":$","")
     end
 end
 
