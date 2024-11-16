@@ -34,7 +34,7 @@ function get_vlpause_bookmark()
     local vlpause_bookmark = ""
     local temp_vlpause_bookmark = ""
 
-    for index = 1, 10, 1 do
+    for index = 1, 10 do
         local bookmark = "bookmark" .. index
         local bookmark_value = vlc.config.get(bookmark)
 

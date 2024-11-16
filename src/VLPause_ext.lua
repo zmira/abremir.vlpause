@@ -137,9 +137,9 @@ function get_vlc_intf_settings()
     local luaintf_index = false
     if VLC_extraintf then
         intf_table = split_string(VLC_extraintf, ":")
-        for i,v in ipairs(intf_table) do
-            if v == "luaintf" then
-                luaintf_index = i
+        for index, value in ipairs(intf_table) do
+            if value == "luaintf" then
+                luaintf_index = index
                 break
             end
         end
@@ -262,7 +262,7 @@ function get_vlpause_bookmark()
     local vlpause_bookmark = ""
     local temp_vlpause_bookmark = ""
 
-    for index = 1, 10, 1 do
+    for index = 1, 10 do
         local bookmark = "bookmark" .. index
         local bookmark_value = vlc.config.get(bookmark)
 
