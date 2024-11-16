@@ -28,7 +28,7 @@ Create directory if it does not exist!
 
 os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
-vlpause_selected_option = nil
+local intermission_percentages_map = {}
 
 function get_vlpause_bookmark()
     local vlpause_bookmark = ""
@@ -62,6 +62,22 @@ function starts_with(str, start)
     return str:sub(1, #start) == start
 end
 
+-- from https://stackoverflow.com/a/27028488/552219
+function dump(o)
+    if type(o) == 'table' then
+       local s = '{ '
+       for k, v in pairs(o) do
+          if type(k) ~= 'number' then
+            k = '"'..k..'"'
+        end
+          s = s .. '['..k..'] = ' .. dump(v) .. ','
+       end
+       return s .. '} '
+    else
+       return tostring(o)
+    end
+ end
+
 function log_info(message)
     vlc.msg.info("[VLPause_intf] " .. message)
 end
@@ -74,9 +90,53 @@ function sleep(seconds)
 	vlc.misc.mwait(vlc.misc.mdate() + seconds*1000000)
 end
 
+function need_to_pause(vlpause_selected_option, position, normalized_position, intermission_position)
+    local intermission_percentages = intermission_percentages_map[vlpause_selected_option - 1]
+
+    -- 0 intermissions
+    if vlpause_selected_option == 1 then
+        return false
+    elseif (intermission_position[normalized_position] == nil or intermission_position[normalized_position] == position)
+        and is_position_in_intermission_percentages(normalized_position, intermission_percentages) then
+        return true
+    end
+end
+
+function is_position_in_intermission_percentages(normalized_position, intermission_percentages)
+    for index = 1, #intermission_percentages do
+        if normalized_position == intermission_percentages[index] then
+            return true
+        end
+    end
+
+    return false
+end
+
+function initialize_intermission_percentages_map()
+    for index = 1, 5 do
+        intermission_percentages_map[index] = get_intermission_percentages(index)
+    end
+end
+
+function get_intermission_percentages(number_of_intermissions)
+    local percentage = 100 / (number_of_intermissions + 1)
+    local total = percentage
+    local intermission_percentages = {}
+
+    repeat
+        table.insert(intermission_percentages, math.floor(total))
+        total = total + percentage
+    until math.ceil(total) >= 100
+    
+    return intermission_percentages
+end
+
 function looper()
     local bookmark = nil
-    local intermission_position = nil
+    local intermission_position = {}
+    local vlpause_selected_option = nil
+
+    initialize_intermission_percentages_map()
 
     while true do
         if vlc.volume.get() == -256 then
@@ -88,7 +148,7 @@ function looper()
         end
 
         if vlc.playlist.status()=="stopped" then
-            intermission_position = nil
+            intermission_position = {}
             sleep(1)
         else
             vlpause_selected_option = get_vlpause_option(bookmark)
@@ -106,18 +166,17 @@ function looper()
                     if vlc.playlist.status() == "playing" then
                         local input = vlc.object.input()
                         local position = vlc.var.get(input, "position")
+                        local normalized_position = math.floor(position * 100)
 
-                        if intermission_position ~= nil
-                            and position < intermission_position then
-                            intermission_position = nil
+                        if intermission_position[normalized_position]
+                            and position < intermission_position[normalized_position] then
+                            intermission_position[normalized_position] = nil
                         end
 
-                        if vlpause_selected_option == 2 -- option 2 is pause halfway
-                            and math.floor(position * 100) == 50 -- position is at 50%
-                            and (intermission_position == nil or intermission_position == position) then
+                        if need_to_pause(vlpause_selected_option, position, normalized_position, intermission_position) then
                             vlc.osd.message("-- INTERMISSION --", 1, "center", 5*1000000) -- display for 5 seconds
                             vlc.playlist.pause()
-                            intermission_position = position
+                            intermission_position[normalized_position] = position
                         end
                     elseif vlc.playlist.status() == "paused" then
                         sleep(0.3)
