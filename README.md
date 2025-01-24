@@ -47,6 +47,6 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 * [Lua reference manual](https://www.lua.org/manual/5.4/contents.html#contents)
 * [Programming in Lua (first edition)](https://www.lua.org/pil/contents.html)
 * [Time v3.2](https://addons.videolan.org/p/1154032/) (c) lubozle
-* lua-users wiki - [String Recipies](http://lua-users.org/wiki/StringRecipes)
+* lua-users wiki - [String Recipes](http://lua-users.org/wiki/StringRecipes)
 * [How to dump a table to console?](https://stackoverflow.com/a/27028488/552219)
 * [Big Buck Bunny](https://www.bigbuckbunny.org) (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
