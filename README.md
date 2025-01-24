@@ -42,8 +42,8 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Acknowledgements
 
-* https://vlc.verg.ca/
-* https://github.com/GDoux/Perroquet-Subtitles-for-VLC
+* <https://vlc.verg.ca/>
+* <https://github.com/GDoux/Perroquet-Subtitles-for-VLC>
 * [Lua reference manual](https://www.lua.org/manual/5.4/contents.html#contents)
 * [Programming in Lua (first edition)](https://www.lua.org/pil/contents.html)
 * [Time v3.2](https://addons.videolan.org/p/1154032/) (c) lubozle
