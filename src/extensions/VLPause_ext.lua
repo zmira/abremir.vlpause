@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.3 ------------
+--[[-------------- VLPause v0.4 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -34,7 +34,7 @@ local string_to_boolean = { ["true"] = true, ["false"] = false }
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.3";
+        version = "0.4";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[

@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.3 ------------
+--[[-------------- VLPause v0.4 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_ext.lua" > Put the VLC Extension Lua script file in \lua\extensions\ folder
