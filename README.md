@@ -33,6 +33,7 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
+* 0.4 - allow automatic skip intermission if suggested number of intermissions is zero
 * 0.3
   * allows selection of number of intermissions, up to 5 equal length chunks
   * add suggested number of intermissions based on duration of input
@@ -42,11 +43,12 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Acknowledgements
 
-* https://vlc.verg.ca/
-* https://github.com/GDoux/Perroquet-Subtitles-for-VLC
+* <https://vlc.verg.ca/>
+* <https://github.com/GDoux/Perroquet-Subtitles-for-VLC>
 * [Lua reference manual](https://www.lua.org/manual/5.4/contents.html#contents)
 * [Programming in Lua (first edition)](https://www.lua.org/pil/contents.html)
 * [Time v3.2](https://addons.videolan.org/p/1154032/) (c) lubozle
-* lua-users wiki - [String Recipies](http://lua-users.org/wiki/StringRecipes)
+* lua-users wiki - [String Recipes](http://lua-users.org/wiki/StringRecipes)
 * [How to dump a table to console?](https://stackoverflow.com/a/27028488/552219)
+* [Lua compiler](https://onecompiler.com/lua)
 * [Big Buck Bunny](https://www.bigbuckbunny.org) (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org

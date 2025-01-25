@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.3 ------------
+--[[-------------- VLPause v0.4 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_ext.lua" > Put the VLC Extension Lua script file in \lua\extensions\ folder
@@ -29,6 +29,9 @@ Create directory if it does not exist!
 os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
 local intermission_percentages_map = {}
+local vlpause_option_brackets
+local vlpause_options = { 0, 1, 2, 3, 4, 5 }
+local string_to_boolean = { ["true"] = true, ["false"] = false }
 
 function get_vlpause_bookmark()
     local vlpause_bookmark = ""
@@ -82,8 +85,34 @@ function log_info(message)
     vlc.msg.info("[VLPause_intf] " .. message)
 end
 
+function get_vlpause_configuration(bookmark)
+    return string.sub(vlc.config.get(bookmark), string.len("VLPAUSE=") + 1)
+end
+
 function get_vlpause_option(bookmark)
-    return tonumber(string.sub(vlc.config.get(bookmark), string.len("VLPAUSE=") + 1))
+    local option = nil
+    local vlpause_configuration = get_vlpause_configuration(bookmark)
+
+    local splitter_position = string.find(vlpause_configuration, ":")
+    if splitter_position then
+        option = string.sub(vlpause_configuration, 1, splitter_position - 1)
+    else
+        option = vlpause_configuration
+    end
+
+    return tonumber(option)
+end
+
+function get_automatic_skip_intermission(bookmark)
+    local skip_intermission = false
+    local vlpause_configuration = get_vlpause_configuration(bookmark)
+
+    local splitter_position = string.find(vlpause_configuration, ":")
+    if splitter_position then
+        skip_intermission = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+    end
+    
+    return skip_intermission
 end
 
 function sleep(seconds)
@@ -112,12 +141,6 @@ function is_position_in_intermission_percentages(normalized_position, intermissi
     return false
 end
 
-function initialize_intermission_percentages_map()
-    for index = 1, 5 do
-        intermission_percentages_map[index] = get_intermission_percentages(index)
-    end
-end
-
 function get_intermission_percentages(number_of_intermissions)
     local percentage = 100 / (number_of_intermissions + 1)
     local total = percentage
@@ -131,12 +154,48 @@ function get_intermission_percentages(number_of_intermissions)
     return intermission_percentages
 end
 
+function initialize_vlpause_options()
+    for index = 1, 5 do
+        intermission_percentages_map[index] = get_intermission_percentages(index)
+    end
+
+    vlpause_option_brackets = {     -- all values in seconds, mapped to the index
+        {0.00*60*60, 1.25*60*60}, -- [00h00m .. 01h15m[ => 0 (Never)
+        {1.25*60*60, 2.25*60*60}, -- [01h15m .. 02h15m[ => 1 (50%)
+        {2.25*60*60, 3.25*60*60}, -- [02h15m .. 03h15m[ => 2 (33%)
+        {3.25*60*60, 4.25*60*60}, -- [03h15m .. 04h15m[ => 3 (25%)
+        {4.25*60*60, 5.25*60*60}, -- [04h15m .. 05h15m[ => 4 (20%)
+        {5.25*60*60, math.huge}   -- [05h15m .. #INF[   => 5 (17%)
+    }
+end
+
+function get_suggested_number_of_intermissions()
+    local item = vlc.input.item()
+
+    if not item then
+        return "---"
+    end
+
+    local duration = item:duration() -- in seconds
+    local duration_bracket
+    for index, value in pairs(vlpause_option_brackets) do
+        if duration >= value[1] and duration < value[2] then
+            duration_bracket = index
+            break
+        end
+    end
+
+    return vlpause_options[duration_bracket] or "---"
+end
+
 function looper()
     local bookmark = nil
     local intermission_position = {}
     local vlpause_selected_option = nil
+    local suggested_number_of_intermissions = nil
+    local automatic_skip_intermission = nill
 
-    initialize_intermission_percentages_map()
+    initialize_vlpause_options()
 
     while true do
         if vlc.volume.get() == -256 then
@@ -147,13 +206,23 @@ function looper()
             bookmark = get_vlpause_bookmark();
         end
 
+        if not suggested_number_of_intermissions then
+            suggested_number_of_intermissions = get_suggested_number_of_intermissions()
+        end
+
+        if not automatic_skip_intermission then
+            automatic_skip_intermission = get_automatic_skip_intermission(bookmark)
+        end
+
         if vlc.playlist.status()=="stopped" then
             intermission_position = {}
+            suggested_number_of_intermissions = nil
+            automatic_skip_intermission = nil
             sleep(1)
         else
             vlpause_selected_option = get_vlpause_option(bookmark)
 
-            if vlpause_selected_option ~= 1 then -- option 1 is never pause
+            if vlpause_selected_option ~= 1 and (suggested_number_of_intermissions ~= 0 or not automatic_skip_intermission) then -- option 1 is never pause
                 local current_input_uri = nil
 			    if vlc.input.item() then
                     current_input_uri = vlc.input.item():uri()

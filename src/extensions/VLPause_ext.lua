@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.3 ------------
+--[[-------------- VLPause v0.4 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -29,11 +29,12 @@ Create directory if it does not exist!
 local vlpause_options
 local vlpause_option_brackets
 local intf_tag = "VLPause_intf"
+local string_to_boolean = { ["true"] = true, ["false"] = false }
 
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.3";
+        version = "0.4";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
@@ -167,6 +168,28 @@ function split_string(s, d)
 end
 
 function initialize_gui()
+    local selected_option = nil
+    local skip_if_suggested_zero_option = false
+    local bookmark = get_vlpause_bookmark()
+
+    if string.len(bookmark or "") > 0 then
+        local bookmark_value = vlc.config.get(bookmark) or ""
+        if starts_with(bookmark_value, "VLPAUSE=") then
+            local vlpause_configuration = string.sub(bookmark_value, string.len("VLPAUSE=") + 1)
+            local splitter_position = string.find(vlpause_configuration, ":")
+
+            local selected_option_value = nil
+            if splitter_position then
+                selected_option_value = string.sub(vlpause_configuration, 1, splitter_position - 1)
+                skip_if_suggested_zero_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+            else
+                selected_option_value = vlpause_configuration
+            end
+
+            selected_option = vlpause_options[tonumber(selected_option_value)]
+        end
+    end
+
     vlpause_dialog = vlc.dialog(descriptor().title)
 
     vlpause_dialog:add_label("Total time:", 1, 1, 4, 2)
@@ -175,29 +198,21 @@ function initialize_gui()
     vlpause_dialog:add_label("Suggested # of intermissions:", 1, 3, 4, 2)
     vlpause_dialog:add_label(get_suggested_number_of_intermissions(), 5, 3, 4, 2)
 
-    vlpause_dialog:add_label("# of intermissions:", 1, 5, 4, 2)
-    vlpause_dropdown = vlpause_dialog:add_dropdown(5, 5, 4, 2)
+    skip_if_suggested_zero = vlpause_dialog:add_check_box("Skip if suggested # of intermissions is 0 (Never)", skip_if_suggested_zero_option, 1, 5, 8, 2)
+
+    vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
+    vlpause_dropdown = vlpause_dialog:add_dropdown(5, 7, 4, 2)
     for index, value in pairs(vlpause_options) do
         vlpause_dropdown:add_value(value, index)
     end
 
-    local selected_option = nil
-    local bookmark = get_vlpause_bookmark()
+    vlpause_dialog:add_label("Configured option:", 1, 9, 4, 2)
+    vlpause_status_label = vlpause_dialog:add_label(selected_option or "---", 5, 9, 4, 2)
 
-    if string.len(bookmark or "") > 0 then
-        local bookmark_value = vlc.config.get(bookmark) or ""
-        if starts_with(bookmark_value, "VLPAUSE=") then
-            selected_option = vlpause_options[tonumber(string.sub(bookmark_value, string.len("VLPAUSE=") + 1))]
-        end
-    end
+    vlpause_dialog:add_button("Apply", click_apply, 5, 11, 2, 2)
+    vlpause_dialog:add_button("Cancel", click_cancel, 7, 11, 2, 2)
 
-    vlpause_dialog:add_label("Configured option:", 1, 7, 4, 2)
-    vlpause_status_label = vlpause_dialog:add_label(selected_option or "---", 5, 7, 4, 2)
-
-    vlpause_dialog:add_button("Apply", click_apply, 5, 9, 2, 2)
-    vlpause_dialog:add_button("Cancel", click_cancel, 7, 9, 2, 2)
-
-    add_copyright_to_vlpause_dialog(1, 11, 8, 2)
+    add_copyright_to_vlpause_dialog(1, 13, 8, 2)
 
     vlpause_dialog:show()
 end
@@ -254,7 +269,7 @@ function click_apply()
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option)
+        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(skip_if_suggested_zero:get_checked()))
     end
 end
 
