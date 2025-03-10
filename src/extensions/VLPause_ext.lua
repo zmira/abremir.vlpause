@@ -154,7 +154,7 @@ end
 
 function initialize_gui()
     local selected_option = nil
-    local skip_if_suggested_zero_option = false
+    local auto_apply_suggested_intermissions_option = false
     local bookmark = get_vlpause_bookmark()
     local string_to_boolean = { ["true"] = true, ["false"] = false }
 
@@ -167,7 +167,7 @@ function initialize_gui()
             local selected_option_value = nil
             if splitter_position then
                 selected_option_value = string.sub(vlpause_configuration, 1, splitter_position - 1)
-                skip_if_suggested_zero_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+                auto_apply_suggested_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
             else
                 selected_option_value = vlpause_configuration
             end
@@ -184,7 +184,7 @@ function initialize_gui()
     vlpause_dialog:add_label("Suggested # of intermissions:", 1, 3, 4, 2)
     vlpause_dialog:add_label(get_suggested_number_of_intermissions(), 5, 3, 4, 2)
 
-    skip_if_suggested_zero = vlpause_dialog:add_check_box("Skip if suggested # of intermissions is 0 (Never)", skip_if_suggested_zero_option, 1, 5, 8, 2)
+    auto_apply_suggested_intermissions = vlpause_dialog:add_check_box("Auto-apply suggested # of intermissions", auto_apply_suggested_intermissions_option, 1, 5, 8, 2)
 
     vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
     vlpause_dropdown = vlpause_dialog:add_dropdown(5, 7, 4, 2)
@@ -255,7 +255,7 @@ function click_apply()
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(skip_if_suggested_zero:get_checked()))
+        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(auto_apply_suggested_intermissions:get_checked()))
     end
 end
 
