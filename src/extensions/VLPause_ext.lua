@@ -26,10 +26,8 @@ INSTALLATION directory (\lua\extensions\):
 Create directory if it does not exist!
 --]]----------------------------------------
 
-local vlpause_options
-local vlpause_option_brackets
 local intf_tag = "VLPause_intf"
-local string_to_boolean = { ["true"] = true, ["false"] = false }
+local vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)", "6 (14%)", "7 (12%)", "8 (11%)", "9 (10%)" }
 
 function descriptor()
     return {
@@ -50,7 +48,6 @@ end
 function activate()
     os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
-    initialize_vlpause_options()
     local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
 
     if not luaintf_index or VLC_luaintf ~= intf_tag then 
@@ -62,18 +59,6 @@ end
 
 function deactivate()
     vlc.deactivate()
-end
-
-function initialize_vlpause_options()
-    vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)" }
-    vlpause_option_brackets = {     -- all values in seconds, mapped to the index
-        {0.00*60*60, 1.25*60*60}, -- [00h00m .. 01h15m[ => 0 (Never)
-        {1.25*60*60, 2.25*60*60}, -- [01h15m .. 02h15m[ => 1 (50%)
-        {2.25*60*60, 3.25*60*60}, -- [02h15m .. 03h15m[ => 2 (33%)
-        {3.25*60*60, 4.25*60*60}, -- [03h15m .. 04h15m[ => 3 (25%)
-        {4.25*60*60, 5.25*60*60}, -- [04h15m .. 05h15m[ => 4 (20%)
-        {5.25*60*60, math.huge}   -- [05h15m .. #INF[   => 5 (17%)
-    }
 end
 
 function close()
@@ -171,6 +156,7 @@ function initialize_gui()
     local selected_option = nil
     local skip_if_suggested_zero_option = false
     local bookmark = get_vlpause_bookmark()
+    local string_to_boolean = { ["true"] = true, ["false"] = false }
 
     if string.len(bookmark or "") > 0 then
         local bookmark_value = vlc.config.get(bookmark) or ""
@@ -230,15 +216,15 @@ function get_suggested_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local duration_bracket
-    for index, value in pairs(vlpause_option_brackets) do
-        if duration >= value[1] and duration < value[2] then
-            duration_bracket = index
-            break
-        end
+    local suggested_number_of_intermissions
+
+    if duration < 4500 then -- 4500 = 1.25h * 60 * 60
+        suggested_number_of_intermissions = 0
+    else
+        suggested_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
     end
 
-    return vlpause_options[duration_bracket] or "---"
+    return suggested_number_of_intermissions
 end
 
 function get_formatted_duration()
