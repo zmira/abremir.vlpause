@@ -135,7 +135,7 @@ function is_time_for_intermission(play_time_in_seconds, intermission_positions_m
     return false
 end
 
-function get_intermission_positions_map(vlpause_selected_option, auto_apply_suggested_intermissions, suggested_number_of_intermissions)
+function get_intermission_positions_map(number_of_intermissions)
     local item = vlc.input.item()
 
     if not item then
@@ -144,11 +144,6 @@ function get_intermission_positions_map(vlpause_selected_option, auto_apply_sugg
 
     local duration = item:duration() -- in seconds
     local positions_map = {}
-    local number_of_intermissions = vlpause_selected_option - 1
-
-    if auto_apply_suggested_intermissions then
-        number_of_intermissions = suggested_number_of_intermissions
-    end
 
     if number_of_intermissions ~= 0 then
         local slice_size = math.floor(duration / (number_of_intermissions + 1))
@@ -188,77 +183,88 @@ function looper()
     local auto_apply_suggested_intermissions = nil
     local intermission_positions_map = {}
     local current_intermission_time = nil
+    local current_input_uri = nil
 
     while true do
         if vlc.volume.get() == -256 then
             break
         end
 
-        if not bookmark then
-            bookmark = get_vlpause_bookmark();
-        end
+        local vlc_status = vlc.playlist.status()
 
-        if not suggested_number_of_intermissions then
-            suggested_number_of_intermissions = get_suggested_number_of_intermissions()
-        end
-
-        if not auto_apply_suggested_intermissions then
-            auto_apply_suggested_intermissions = get_auto_apply_suggested_intermissions(bookmark)
-        end
-
-        if vlc.playlist.status()=="stopped" then
+        if vlc_status == "stopped" then
+            bookmark = nil
+            vlpause_selected_option = nil
             suggested_number_of_intermissions = nil
             auto_apply_suggested_intermissions = nil
             intermission_positions_map = {}
+            current_intermission_time = nil
+            current_input_uri = nil
             sleep(1)
-        else
-            vlpause_selected_option = get_vlpause_option(bookmark)
-
-            if #intermission_positions_map == 0 then
-                intermission_positions_map = get_intermission_positions_map(vlpause_selected_option, auto_apply_suggested_intermissions, suggested_number_of_intermissions)
-            end
-
-            if (auto_apply_suggested_intermissions and suggested_number_of_intermissions ~= 0) or vlpause_selected_option ~= 1 then -- option 1 is never pause
-                local current_input_uri = nil
-			    if vlc.input.item() then
-                    current_input_uri = vlc.input.item():uri()
+        elseif vlc_status == "paused" then
+            sleep(0.3)
+        elseif vlc_status == "playing" then
+            local input_uri = vlc.input.item():uri()
+            if not input_uri then
+                log_info("WTF??? " .. vlc.playlist.status())
+                sleep(0.1)
+            else
+                if (input_uri ~= current_input_uri) then
+                    bookmark = nil
+                    vlpause_selected_option = nil
+                    suggested_number_of_intermissions = nil
+                    auto_apply_suggested_intermissions = nil
+                    intermission_positions_map = {}
+                    current_intermission_time = nil
+                    current_input_uri = input_uri
                 end
 
-                if not current_input_uri then
-                    log_info("WTF??? " .. vlc.playlist.status())
-                    sleep(0.1)
-                else
-                    if vlc.playlist.status() == "playing" then
-                        local input = vlc.object.input()
-                        local play_time = vlc.var.get(input, "time")
-                        local play_time_in_seconds = math.floor(vlc.var.get(input, "time") / 1000 / 1000) -- in seconds
+                if not bookmark then
+                    bookmark = get_vlpause_bookmark();
+                end
 
-                        if current_intermission_time ~= nil
-                            and current_intermission_time ~= play_time then
-                            current_intermission_time = nil
-                        end
+                vlpause_selected_option = get_vlpause_option(bookmark)
+        
+                if not suggested_number_of_intermissions then
+                    suggested_number_of_intermissions = get_suggested_number_of_intermissions()
+                end
+        
+                if not auto_apply_suggested_intermissions then
+                    auto_apply_suggested_intermissions = get_auto_apply_suggested_intermissions(bookmark)
+                end
 
-                        if need_to_pause(play_time, play_time_in_seconds, intermission_positions_map, current_intermission_time) then
-                            log_info("INTERMISSION :: selected option = " .. dump(vlpause_selected_option)
-                                .. ", suggested number of intermissions = " .. dump(suggested_number_of_intermissions) 
-                                .. ", automatic apply suggested # of intermissions = " .. dump(auto_apply_suggested_intermissions)
-                                .. ", play time = " .. dump(play_time)
-                                .. ", play time [in seconds] = " .. dump(play_time_in_seconds)
-                                .. ", intermission position map = " .. dump(intermission_positions_map)
-                            )
-                            vlc.osd.message("-- INTERMISSION --", 1, "center", 5*1000000) -- display for 5 seconds
-                            vlc.playlist.pause()
-                            current_intermission_time = play_time
-                        end
-                    elseif vlc.playlist.status() == "paused" then
-                        sleep(0.3)
-                    else
-                        sleep(1)
+                local number_of_intermissions = auto_apply_suggested_intermissions and suggested_number_of_intermissions or (vlpause_selected_option - 1) -- selected option is based on an array!
+
+                if number_of_intermissions ~= 0 then
+                    if #intermission_positions_map == 0 then
+                        intermission_positions_map = get_intermission_positions_map(number_of_intermissions)
                     end
 
-                    sleep(0.1)
+                    local input = vlc.object.input()
+                    local play_time = vlc.var.get(input, "time")
+                    local play_time_in_seconds = math.floor(vlc.var.get(input, "time") / 1000 / 1000) -- in seconds
+
+                    if current_intermission_time ~= nil
+                        and current_intermission_time ~= play_time then
+                        current_intermission_time = nil
+                    end
+
+                    if need_to_pause(play_time, play_time_in_seconds, intermission_positions_map, current_intermission_time) then
+                        log_info("INTERMISSION :: selected option = " .. dump(vlpause_selected_option)
+                            .. ", suggested number of intermissions = " .. dump(suggested_number_of_intermissions) 
+                            .. ", automatic apply suggested # of intermissions = " .. dump(auto_apply_suggested_intermissions)
+                            .. ", play time = " .. dump(play_time)
+                            .. ", play time [in seconds] = " .. dump(play_time_in_seconds)
+                            .. ", intermission position map = " .. dump(intermission_positions_map)
+                        )
+                        vlc.osd.message("-- INTERMISSION --", 1, "center", 5*1000000) -- display for 5 seconds
+                        vlc.playlist.pause()
+                        current_intermission_time = play_time
+                    end
                 end
             end
+        else
+            sleep(1)
         end
         
         sleep(0.1)
