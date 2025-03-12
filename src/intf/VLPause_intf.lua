@@ -184,6 +184,7 @@ function looper()
     local intermission_positions_map = {}
     local current_intermission_time = nil
     local current_input_uri = nil
+    local display_intermission_config = false
 
     while true do
         if vlc.volume.get() == -256 then
@@ -200,6 +201,7 @@ function looper()
             intermission_positions_map = {}
             current_intermission_time = nil
             current_input_uri = nil
+            display_intermission_config = true
             sleep(1)
         elseif vlc_status == "paused" then
             sleep(0.3)
@@ -217,6 +219,7 @@ function looper()
                     intermission_positions_map = {}
                     current_intermission_time = nil
                     current_input_uri = input_uri
+                    display_intermission_config = true
                 end
 
                 if not bookmark then
@@ -234,6 +237,11 @@ function looper()
                 end
 
                 local number_of_intermissions = auto_apply_suggested_intermissions and suggested_number_of_intermissions or (vlpause_selected_option - 1) -- selected option is based on an array!
+
+                if display_intermission_config then
+                    vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_suggested_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 3*1000000) -- display for 3 seconds
+                    display_intermission_config = false
+                end
 
                 if number_of_intermissions ~= 0 then
                     if #intermission_positions_map == 0 then
