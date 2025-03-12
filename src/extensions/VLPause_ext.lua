@@ -50,10 +50,10 @@ function activate()
 
     local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
 
-    if not luaintf_index or VLC_luaintf ~= intf_tag then 
-        trigger_menu(2) 
+    if not luaintf_index or VLC_luaintf ~= intf_tag then
+        trigger_menu(2)
     else 
-        trigger_menu(1) 
+        trigger_menu(1)
     end
 end
 

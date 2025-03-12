@@ -108,7 +108,7 @@ function get_auto_apply_suggested_intermissions(bookmark)
     if splitter_position then
         auto_apply_suggested_intermissions = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
     end
-    
+
     return auto_apply_suggested_intermissions
 end
 
@@ -274,7 +274,7 @@ function looper()
         else
             sleep(1)
         end
-        
+
         sleep(0.1)
     end
 end
