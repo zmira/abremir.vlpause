@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.4 ------------
+--[[-------------- VLPause v0.5 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -32,7 +32,7 @@ local vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.4";
+        version = "0.5";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
