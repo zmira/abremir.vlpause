@@ -33,6 +33,11 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
+* 0.5
+  * replace "automatic skip intermission if suggested is zero" with "auto-apply suggested number of intermissions"
+  * calculate suggested number of intermissions instead of relying on a static mapping table
+  * refactor loop function to re-calculate variables when input URI changes
+  * display number of planned intermissions on start of play
 * 0.4 - allow automatic skip intermission if suggested number of intermissions is zero
 * 0.3
   * allows selection of number of intermissions, up to 5 equal length chunks

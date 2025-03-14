@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.4 ------------
+--[[-------------- VLPause v0.5 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -26,15 +26,13 @@ INSTALLATION directory (\lua\extensions\):
 Create directory if it does not exist!
 --]]----------------------------------------
 
-local vlpause_options
-local vlpause_option_brackets
 local intf_tag = "VLPause_intf"
-local string_to_boolean = { ["true"] = true, ["false"] = false }
+local vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)", "6 (14%)", "7 (12%)", "8 (11%)", "9 (10%)" }
 
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.4";
+        version = "0.5";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
@@ -50,30 +48,17 @@ end
 function activate()
     os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
-    initialize_vlpause_options()
     local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
 
-    if not luaintf_index or VLC_luaintf ~= intf_tag then 
-        trigger_menu(2) 
+    if not luaintf_index or VLC_luaintf ~= intf_tag then
+        trigger_menu(2)
     else 
-        trigger_menu(1) 
+        trigger_menu(1)
     end
 end
 
 function deactivate()
     vlc.deactivate()
-end
-
-function initialize_vlpause_options()
-    vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)" }
-    vlpause_option_brackets = {     -- all values in seconds, mapped to the index
-        {0.00*60*60, 1.25*60*60}, -- [00h00m .. 01h15m[ => 0 (Never)
-        {1.25*60*60, 2.25*60*60}, -- [01h15m .. 02h15m[ => 1 (50%)
-        {2.25*60*60, 3.25*60*60}, -- [02h15m .. 03h15m[ => 2 (33%)
-        {3.25*60*60, 4.25*60*60}, -- [03h15m .. 04h15m[ => 3 (25%)
-        {4.25*60*60, 5.25*60*60}, -- [04h15m .. 05h15m[ => 4 (20%)
-        {5.25*60*60, math.huge}   -- [05h15m .. #INF[   => 5 (17%)
-    }
 end
 
 function close()
@@ -169,8 +154,9 @@ end
 
 function initialize_gui()
     local selected_option = nil
-    local skip_if_suggested_zero_option = false
+    local auto_apply_suggested_intermissions_option = false
     local bookmark = get_vlpause_bookmark()
+    local string_to_boolean = { ["true"] = true, ["false"] = false }
 
     if string.len(bookmark or "") > 0 then
         local bookmark_value = vlc.config.get(bookmark) or ""
@@ -181,7 +167,7 @@ function initialize_gui()
             local selected_option_value = nil
             if splitter_position then
                 selected_option_value = string.sub(vlpause_configuration, 1, splitter_position - 1)
-                skip_if_suggested_zero_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+                auto_apply_suggested_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
             else
                 selected_option_value = vlpause_configuration
             end
@@ -198,7 +184,7 @@ function initialize_gui()
     vlpause_dialog:add_label("Suggested # of intermissions:", 1, 3, 4, 2)
     vlpause_dialog:add_label(get_suggested_number_of_intermissions(), 5, 3, 4, 2)
 
-    skip_if_suggested_zero = vlpause_dialog:add_check_box("Skip if suggested # of intermissions is 0 (Never)", skip_if_suggested_zero_option, 1, 5, 8, 2)
+    auto_apply_suggested_intermissions = vlpause_dialog:add_check_box("Auto-apply suggested # of intermissions", auto_apply_suggested_intermissions_option, 1, 5, 8, 2)
 
     vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
     vlpause_dropdown = vlpause_dialog:add_dropdown(5, 7, 4, 2)
@@ -230,15 +216,15 @@ function get_suggested_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local duration_bracket
-    for index, value in pairs(vlpause_option_brackets) do
-        if duration >= value[1] and duration < value[2] then
-            duration_bracket = index
-            break
-        end
+    local suggested_number_of_intermissions
+
+    if duration < 4500 then -- 4500 = 1.25h * 60 * 60
+        suggested_number_of_intermissions = 0
+    else
+        suggested_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
     end
 
-    return vlpause_options[duration_bracket] or "---"
+    return suggested_number_of_intermissions
 end
 
 function get_formatted_duration()
@@ -269,7 +255,7 @@ function click_apply()
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(skip_if_suggested_zero:get_checked()))
+        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(auto_apply_suggested_intermissions:get_checked()))
     end
 end
 
