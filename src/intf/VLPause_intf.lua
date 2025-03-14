@@ -116,15 +116,6 @@ function sleep(seconds)
 	vlc.misc.mwait(vlc.misc.mdate() + seconds*1000000)
 end
 
-function need_to_pause(play_time, play_time_in_seconds, intermission_positions_map, current_intermission_time)
-    if current_intermission_time == nil 
-        and is_time_for_intermission(play_time_in_seconds, intermission_positions_map) then
-        return true
-    end
-
-    return false
-end
-
 function is_time_for_intermission(play_time_in_seconds, intermission_positions_map)
     for index = 1, #intermission_positions_map do
         if play_time_in_seconds == intermission_positions_map[index] then
@@ -253,11 +244,12 @@ function looper()
                     local play_time_in_seconds = math.floor(vlc.var.get(input, "time") / 1000 / 1000) -- in seconds
 
                     if current_intermission_time ~= nil
-                        and current_intermission_time ~= play_time then
+                        and current_intermission_time ~= play_time_in_seconds then
                         current_intermission_time = nil
                     end
 
-                    if need_to_pause(play_time, play_time_in_seconds, intermission_positions_map, current_intermission_time) then
+                    if current_intermission_time == nil and is_time_for_intermission(play_time_in_seconds, intermission_positions_map) then
+                        current_intermission_time = play_time_in_seconds
                         log_info("INTERMISSION :: selected option = " .. dump(vlpause_selected_option)
                             .. ", suggested number of intermissions = " .. dump(suggested_number_of_intermissions) 
                             .. ", automatic apply suggested # of intermissions = " .. dump(auto_apply_suggested_intermissions)
@@ -267,7 +259,6 @@ function looper()
                         )
                         vlc.osd.message("-- INTERMISSION --", 1, "center", 5*1000000) -- display for 5 seconds
                         vlc.playlist.pause()
-                        current_intermission_time = play_time
                     end
                 end
             end
