@@ -86,18 +86,18 @@ function get_vlpause_configuration(bookmark)
     return string.sub(vlc.config.get(bookmark), string.len("VLPAUSE=") + 1)
 end
 
-function get_vlpause_option(bookmark)
-    local option = nil
+function get_saved_number_of_intermissions(bookmark)
+    local number_of_intermissions = nil
     local vlpause_configuration = get_vlpause_configuration(bookmark)
 
     local splitter_position = string.find(vlpause_configuration, ":")
     if splitter_position then
-        option = string.sub(vlpause_configuration, 1, splitter_position - 1)
+        number_of_intermissions = string.sub(vlpause_configuration, 1, splitter_position - 1)
     else
-        option = vlpause_configuration
+        number_of_intermissions = vlpause_configuration
     end
 
-    return tonumber(option)
+    return tonumber(number_of_intermissions)
 end
 
 function get_auto_apply_suggested_intermissions(bookmark)
@@ -169,7 +169,7 @@ end
 
 function looper()
     local bookmark = nil
-    local vlpause_selected_option = nil
+    local manual_number_of_intermissions = nil
     local suggested_number_of_intermissions = nil
     local auto_apply_suggested_intermissions = nil
     local intermission_positions_map = {}
@@ -186,7 +186,7 @@ function looper()
 
         if vlc_status == "stopped" then
             bookmark = nil
-            vlpause_selected_option = nil
+            manual_number_of_intermissions = nil
             suggested_number_of_intermissions = nil
             auto_apply_suggested_intermissions = nil
             intermission_positions_map = {}
@@ -204,7 +204,7 @@ function looper()
             else
                 if (input_uri ~= current_input_uri) then
                     bookmark = nil
-                    vlpause_selected_option = nil
+                    manual_number_of_intermissions = nil
                     suggested_number_of_intermissions = nil
                     auto_apply_suggested_intermissions = nil
                     intermission_positions_map = {}
@@ -217,7 +217,7 @@ function looper()
                     bookmark = get_vlpause_bookmark();
                 end
 
-                vlpause_selected_option = get_vlpause_option(bookmark)
+                manual_number_of_intermissions = get_saved_number_of_intermissions(bookmark)
         
                 if not suggested_number_of_intermissions then
                     suggested_number_of_intermissions = get_suggested_number_of_intermissions()
@@ -227,7 +227,7 @@ function looper()
                     auto_apply_suggested_intermissions = get_auto_apply_suggested_intermissions(bookmark)
                 end
 
-                local number_of_intermissions = auto_apply_suggested_intermissions and suggested_number_of_intermissions or (vlpause_selected_option - 1) -- selected option is based on an array!
+                local number_of_intermissions = auto_apply_suggested_intermissions and suggested_number_of_intermissions or manual_number_of_intermissions
 
                 if display_intermission_config then
                     vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_suggested_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 3*1000000) -- display for 3 seconds
@@ -250,7 +250,7 @@ function looper()
 
                     if current_intermission_time == nil and is_time_for_intermission(play_time_in_seconds, intermission_positions_map) then
                         current_intermission_time = play_time_in_seconds
-                        log_info("INTERMISSION :: selected option = " .. dump(vlpause_selected_option)
+                        log_info("INTERMISSION :: manual number of intermissions = " .. dump(manual_number_of_intermissions)
                             .. ", suggested number of intermissions = " .. dump(suggested_number_of_intermissions) 
                             .. ", automatic apply suggested # of intermissions = " .. dump(auto_apply_suggested_intermissions)
                             .. ", play time = " .. dump(play_time)

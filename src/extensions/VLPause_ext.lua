@@ -27,7 +27,6 @@ Create directory if it does not exist!
 --]]----------------------------------------
 
 local intf_tag = "VLPause_intf"
-local vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)", "6 (14%)", "7 (12%)", "8 (11%)", "9 (10%)" }
 
 function descriptor()
     return {
@@ -153,7 +152,7 @@ function split_string(s, d)
 end
 
 function initialize_gui()
-    local selected_option = nil
+    local saved_number_of_intermissions = nil
     local auto_apply_suggested_intermissions_option = false
     local bookmark = get_vlpause_bookmark()
     local string_to_boolean = { ["true"] = true, ["false"] = false }
@@ -164,15 +163,12 @@ function initialize_gui()
             local vlpause_configuration = string.sub(bookmark_value, string.len("VLPAUSE=") + 1)
             local splitter_position = string.find(vlpause_configuration, ":")
 
-            local selected_option_value = nil
             if splitter_position then
-                selected_option_value = string.sub(vlpause_configuration, 1, splitter_position - 1)
+                saved_number_of_intermissions = string.sub(vlpause_configuration, 1, splitter_position - 1)
                 auto_apply_suggested_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
             else
-                selected_option_value = vlpause_configuration
+                saved_number_of_intermissions = vlpause_configuration
             end
-
-            selected_option = vlpause_options[tonumber(selected_option_value)]
         end
     end
 
@@ -187,18 +183,12 @@ function initialize_gui()
     auto_apply_suggested_intermissions = vlpause_dialog:add_check_box("Auto-apply suggested # of intermissions", auto_apply_suggested_intermissions_option, 1, 5, 8, 2)
 
     vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
-    vlpause_dropdown = vlpause_dialog:add_dropdown(5, 7, 4, 2)
-    for index, value in pairs(vlpause_options) do
-        vlpause_dropdown:add_value(value, index)
-    end
+    vlpause_text_input = vlpause_dialog:add_text_input(saved_number_of_intermissions or "", 5, 7, 4, 2)
 
-    vlpause_dialog:add_label("Configured option:", 1, 9, 4, 2)
-    vlpause_status_label = vlpause_dialog:add_label(selected_option or "---", 5, 9, 4, 2)
+    vlpause_dialog:add_button("Apply", click_apply, 5, 9, 2, 2)
+    vlpause_dialog:add_button("Cancel", click_cancel, 7, 9, 2, 2)
 
-    vlpause_dialog:add_button("Apply", click_apply, 5, 11, 2, 2)
-    vlpause_dialog:add_button("Cancel", click_cancel, 7, 11, 2, 2)
-
-    add_copyright_to_vlpause_dialog(1, 13, 8, 2)
+    add_copyright_to_vlpause_dialog(1, 11, 8, 2)
 
     vlpause_dialog:show()
 end
@@ -248,14 +238,17 @@ function click_cancel()
 end
 
 function click_apply()
-    local selected_option = vlpause_dropdown:get_value()
-    local selected_value = vlpause_options[selected_option]
-    vlpause_status_label:set_text(selected_value)
+    local manual_number_of_intermissions = tonumber(vlpause_text_input:get_text(), 10)
+
+    if manual_number_of_intermissions == nil or manual_number_of_intermissions < 0 then
+        manual_number_of_intermissions = 0
+        vlpause_text_input:set_text("0")
+    end
 
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(auto_apply_suggested_intermissions:get_checked()))
+        vlc.config.set(bookmark, "VLPAUSE=" .. manual_number_of_intermissions .. ":" .. tostring(auto_apply_suggested_intermissions:get_checked()))
     end
 end
 
