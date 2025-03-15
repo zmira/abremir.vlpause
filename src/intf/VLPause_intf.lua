@@ -100,16 +100,16 @@ function get_saved_number_of_intermissions(bookmark)
     return tonumber(number_of_intermissions)
 end
 
-function get_auto_apply_suggested_intermissions(bookmark)
-    local auto_apply_suggested_intermissions = false
+function get_auto_apply_calculated_intermissions(bookmark)
+    local auto_apply_calculated_intermissions = false
     local vlpause_configuration = get_vlpause_configuration(bookmark)
 
     local splitter_position = string.find(vlpause_configuration, ":")
     if splitter_position then
-        auto_apply_suggested_intermissions = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+        auto_apply_calculated_intermissions = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
     end
 
-    return auto_apply_suggested_intermissions
+    return auto_apply_calculated_intermissions
 end
 
 function sleep(seconds)
@@ -148,7 +148,7 @@ function get_intermission_positions_map(number_of_intermissions)
     return positions_map;
 end
 
-function get_suggested_number_of_intermissions()
+function get_calculated_number_of_intermissions()
     local item = vlc.input.item()
 
     if not item then
@@ -156,22 +156,22 @@ function get_suggested_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local suggested_number_of_intermissions
+    local calculated_number_of_intermissions
 
     if duration < 4500 then -- 4500 = 1.25h * 60 * 60
-        suggested_number_of_intermissions = 0
+        calculated_number_of_intermissions = 0
     else
-        suggested_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
+        calculated_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
     end
 
-    return suggested_number_of_intermissions
+    return calculated_number_of_intermissions
 end
 
 function looper()
     local bookmark = nil
     local manual_number_of_intermissions = nil
-    local suggested_number_of_intermissions = nil
-    local auto_apply_suggested_intermissions = nil
+    local calculated_number_of_intermissions = nil
+    local auto_apply_calculated_intermissions = nil
     local intermission_positions_map = {}
     local current_intermission_time = nil
     local current_input_uri = nil
@@ -187,8 +187,8 @@ function looper()
         if vlc_status == "stopped" then
             bookmark = nil
             manual_number_of_intermissions = nil
-            suggested_number_of_intermissions = nil
-            auto_apply_suggested_intermissions = nil
+            calculated_number_of_intermissions = nil
+            auto_apply_calculated_intermissions = nil
             intermission_positions_map = {}
             current_intermission_time = nil
             current_input_uri = nil
@@ -205,8 +205,8 @@ function looper()
                 if (input_uri ~= current_input_uri) then
                     bookmark = nil
                     manual_number_of_intermissions = nil
-                    suggested_number_of_intermissions = nil
-                    auto_apply_suggested_intermissions = nil
+                    calculated_number_of_intermissions = nil
+                    auto_apply_calculated_intermissions = nil
                     intermission_positions_map = {}
                     current_intermission_time = nil
                     current_input_uri = input_uri
@@ -219,18 +219,18 @@ function looper()
 
                 manual_number_of_intermissions = get_saved_number_of_intermissions(bookmark)
         
-                if not suggested_number_of_intermissions then
-                    suggested_number_of_intermissions = get_suggested_number_of_intermissions()
+                if not calculated_number_of_intermissions then
+                    calculated_number_of_intermissions = get_calculated_number_of_intermissions()
                 end
         
-                if not auto_apply_suggested_intermissions then
-                    auto_apply_suggested_intermissions = get_auto_apply_suggested_intermissions(bookmark)
+                if not auto_apply_calculated_intermissions then
+                    auto_apply_calculated_intermissions = get_auto_apply_calculated_intermissions(bookmark)
                 end
 
-                local number_of_intermissions = auto_apply_suggested_intermissions and suggested_number_of_intermissions or manual_number_of_intermissions
+                local number_of_intermissions = auto_apply_calculated_intermissions and calculated_number_of_intermissions or manual_number_of_intermissions
 
                 if display_intermission_config then
-                    vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_suggested_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 3*1000000) -- display for 3 seconds
+                    vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_calculated_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 3*1000000) -- display for 3 seconds
                     display_intermission_config = false
                 end
 
@@ -251,8 +251,8 @@ function looper()
                     if current_intermission_time == nil and is_time_for_intermission(play_time_in_seconds, intermission_positions_map) then
                         current_intermission_time = play_time_in_seconds
                         log_info("INTERMISSION :: manual number of intermissions = " .. dump(manual_number_of_intermissions)
-                            .. ", suggested number of intermissions = " .. dump(suggested_number_of_intermissions) 
-                            .. ", automatic apply suggested # of intermissions = " .. dump(auto_apply_suggested_intermissions)
+                            .. ", calculated number of intermissions = " .. dump(calculated_number_of_intermissions) 
+                            .. ", automatic apply calculated # of intermissions = " .. dump(auto_apply_calculated_intermissions)
                             .. ", play time = " .. dump(play_time)
                             .. ", play time [in seconds] = " .. dump(play_time_in_seconds)
                             .. ", intermission position map = " .. dump(intermission_positions_map)

@@ -153,7 +153,7 @@ end
 
 function initialize_gui()
     local saved_number_of_intermissions = nil
-    local auto_apply_suggested_intermissions_option = false
+    local auto_apply_calculated_intermissions_option = false
     local bookmark = get_vlpause_bookmark()
     local string_to_boolean = { ["true"] = true, ["false"] = false }
 
@@ -165,7 +165,7 @@ function initialize_gui()
 
             if splitter_position then
                 saved_number_of_intermissions = string.sub(vlpause_configuration, 1, splitter_position - 1)
-                auto_apply_suggested_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+                auto_apply_calculated_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
             else
                 saved_number_of_intermissions = vlpause_configuration
             end
@@ -177,10 +177,10 @@ function initialize_gui()
     vlpause_dialog:add_label("Total time:", 1, 1, 4, 2)
     vlpause_dialog:add_label(get_formatted_duration(), 5, 1, 4, 2)
 
-    vlpause_dialog:add_label("Suggested # of intermissions:", 1, 3, 4, 2)
-    vlpause_dialog:add_label(get_suggested_number_of_intermissions(), 5, 3, 4, 2)
+    vlpause_dialog:add_label("Calculated # of intermissions:", 1, 3, 4, 2)
+    vlpause_dialog:add_label(get_calculated_number_of_intermissions(), 5, 3, 4, 2)
 
-    auto_apply_suggested_intermissions = vlpause_dialog:add_check_box("Auto-apply suggested # of intermissions", auto_apply_suggested_intermissions_option, 1, 5, 8, 2)
+    auto_apply_calculated_intermissions = vlpause_dialog:add_check_box("Auto-apply calculated # of intermissions", auto_apply_calculated_intermissions_option, 1, 5, 8, 2)
 
     vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
     vlpause_text_input = vlpause_dialog:add_text_input(saved_number_of_intermissions or "", 5, 7, 4, 2)
@@ -198,7 +198,7 @@ function add_copyright_to_vlpause_dialog(column, row, hspan, vspan)
     vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024-" .. os.date("%Y") .. " " .. descriptor().author, column, row + 2, hspan, vspan)
 end
 
-function get_suggested_number_of_intermissions()
+function get_calculated_number_of_intermissions()
     local item = vlc.input.item()
 
     if not item then
@@ -206,15 +206,15 @@ function get_suggested_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local suggested_number_of_intermissions
+    local calculated_number_of_intermissions
 
     if duration < 4500 then -- 4500 = 1.25h * 60 * 60
-        suggested_number_of_intermissions = 0
+        calculated_number_of_intermissions = 0
     else
-        suggested_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
+        calculated_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
     end
 
-    return suggested_number_of_intermissions
+    return calculated_number_of_intermissions
 end
 
 function get_formatted_duration()
@@ -248,7 +248,7 @@ function click_apply()
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. manual_number_of_intermissions .. ":" .. tostring(auto_apply_suggested_intermissions:get_checked()))
+        vlc.config.set(bookmark, "VLPAUSE=" .. manual_number_of_intermissions .. ":" .. tostring(auto_apply_calculated_intermissions:get_checked()))
     end
 end
 
