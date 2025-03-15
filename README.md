@@ -33,6 +33,8 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
+* 0.6
+  * replace static dropdown to select the number of intermissions with text input to allow manual entry
 * 0.5
   * replace "automatic skip intermission if suggested is zero" with "auto-apply suggested number of intermissions"
   * calculate suggested number of intermissions instead of relying on a static mapping table

@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.5 ------------
+--[[-------------- VLPause v0.6 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -27,12 +27,11 @@ Create directory if it does not exist!
 --]]----------------------------------------
 
 local intf_tag = "VLPause_intf"
-local vlpause_options = { "0 (Never)", "1 (50%)", "2 (33%)", "3 (25%)", "4 (20%)", "5 (17%)", "6 (14%)", "7 (12%)", "8 (11%)", "9 (10%)" }
 
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.5";
+        version = "0.6";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
@@ -48,7 +47,7 @@ end
 function activate()
     os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
-    local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
+    local _, VLC_luaintf, _, luaintf_index = get_vlc_intf_settings()
 
     if not luaintf_index or VLC_luaintf ~= intf_tag then
         trigger_menu(2)
@@ -86,7 +85,7 @@ function initialize_gui_intf()
     vlpause_dialog:add_button("Save", click_save_settings, 3, 3, 1, 2)
     vlpause_dialog:add_button("Cancel", click_cancel_settings, 4, 3, 1, 2)
 
-    local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
+    local _, VLC_luaintf, _, luaintf_index = get_vlc_intf_settings()
     lb_message = vlpause_dialog:add_label("Current status: " .. (luaintf_index and "ENABLED" or "DISABLED") .. " " .. tostring(VLC_luaintf), 1, 5, 4, 2)
 
     add_copyright_to_vlpause_dialog(1, 7, 4, 2)
@@ -95,7 +94,7 @@ function initialize_gui_intf()
 end
 
 function click_save_settings()
-    local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
+    local _, _, intf_table, luaintf_index = get_vlc_intf_settings()
 
     if enable_extraintf:get_checked() then
         if not luaintf_index then
@@ -153,8 +152,8 @@ function split_string(s, d)
 end
 
 function initialize_gui()
-    local selected_option = nil
-    local auto_apply_suggested_intermissions_option = false
+    local saved_number_of_intermissions = nil
+    local auto_apply_calculated_intermissions_option = false
     local bookmark = get_vlpause_bookmark()
     local string_to_boolean = { ["true"] = true, ["false"] = false }
 
@@ -164,15 +163,12 @@ function initialize_gui()
             local vlpause_configuration = string.sub(bookmark_value, string.len("VLPAUSE=") + 1)
             local splitter_position = string.find(vlpause_configuration, ":")
 
-            local selected_option_value = nil
             if splitter_position then
-                selected_option_value = string.sub(vlpause_configuration, 1, splitter_position - 1)
-                auto_apply_suggested_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
+                saved_number_of_intermissions = string.sub(vlpause_configuration, 1, splitter_position - 1)
+                auto_apply_calculated_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
             else
-                selected_option_value = vlpause_configuration
+                saved_number_of_intermissions = vlpause_configuration
             end
-
-            selected_option = vlpause_options[tonumber(selected_option_value)]
         end
     end
 
@@ -181,34 +177,28 @@ function initialize_gui()
     vlpause_dialog:add_label("Total time:", 1, 1, 4, 2)
     vlpause_dialog:add_label(get_formatted_duration(), 5, 1, 4, 2)
 
-    vlpause_dialog:add_label("Suggested # of intermissions:", 1, 3, 4, 2)
-    vlpause_dialog:add_label(get_suggested_number_of_intermissions(), 5, 3, 4, 2)
+    vlpause_dialog:add_label("Calculated # of intermissions:", 1, 3, 4, 2)
+    vlpause_dialog:add_label(get_calculated_number_of_intermissions(), 5, 3, 4, 2)
 
-    auto_apply_suggested_intermissions = vlpause_dialog:add_check_box("Auto-apply suggested # of intermissions", auto_apply_suggested_intermissions_option, 1, 5, 8, 2)
+    auto_apply_calculated_intermissions = vlpause_dialog:add_check_box("Auto-apply calculated # of intermissions", auto_apply_calculated_intermissions_option, 1, 5, 8, 2)
 
     vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
-    vlpause_dropdown = vlpause_dialog:add_dropdown(5, 7, 4, 2)
-    for index, value in pairs(vlpause_options) do
-        vlpause_dropdown:add_value(value, index)
-    end
+    vlpause_text_input = vlpause_dialog:add_text_input(saved_number_of_intermissions or "", 5, 7, 4, 2)
 
-    vlpause_dialog:add_label("Configured option:", 1, 9, 4, 2)
-    vlpause_status_label = vlpause_dialog:add_label(selected_option or "---", 5, 9, 4, 2)
+    vlpause_dialog:add_button("Apply", click_apply, 5, 9, 2, 2)
+    vlpause_dialog:add_button("Cancel", click_cancel, 7, 9, 2, 2)
 
-    vlpause_dialog:add_button("Apply", click_apply, 5, 11, 2, 2)
-    vlpause_dialog:add_button("Cancel", click_cancel, 7, 11, 2, 2)
-
-    add_copyright_to_vlpause_dialog(1, 13, 8, 2)
+    add_copyright_to_vlpause_dialog(1, 11, 8, 2)
 
     vlpause_dialog:show()
 end
 
 function add_copyright_to_vlpause_dialog(column, row, hspan, vspan)
     vlpause_dialog:add_label("", column, row, hspan, vspan)
-    vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024 " .. descriptor().author, column, row + 2, hspan, vspan)
+    vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024-" .. os.date("%Y") .. " " .. descriptor().author, column, row + 2, hspan, vspan)
 end
 
-function get_suggested_number_of_intermissions()
+function get_calculated_number_of_intermissions()
     local item = vlc.input.item()
 
     if not item then
@@ -216,15 +206,11 @@ function get_suggested_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local suggested_number_of_intermissions
 
-    if duration < 4500 then -- 4500 = 1.25h * 60 * 60
-        suggested_number_of_intermissions = 0
-    else
-        suggested_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
-    end
-
-    return suggested_number_of_intermissions
+    -- if duration is less than 1h15m (4500 = 1.25h * 60 * 60)
+    -- then use 0 else subtract 1h15m from the duration and
+    -- convert to hours (3600 = 1h * 60 * 60), round up to nearest integer
+    return duration < 4500 and 0 or math.ceil((duration - 4500) / 3600)
 end
 
 function get_formatted_duration()
@@ -248,14 +234,17 @@ function click_cancel()
 end
 
 function click_apply()
-    local selected_option = vlpause_dropdown:get_value()
-    local selected_value = vlpause_options[selected_option]
-    vlpause_status_label:set_text(selected_value)
+    local manual_number_of_intermissions = tonumber(vlpause_text_input:get_text(), 10)
+
+    if manual_number_of_intermissions == nil or manual_number_of_intermissions < 0 then
+        manual_number_of_intermissions = 0
+        vlpause_text_input:set_text("0")
+    end
 
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. selected_option .. ":" .. tostring(auto_apply_suggested_intermissions:get_checked()))
+        vlc.config.set(bookmark, "VLPAUSE=" .. manual_number_of_intermissions .. ":" .. tostring(auto_apply_calculated_intermissions:get_checked()))
     end
 end
 
@@ -279,11 +268,7 @@ function get_vlpause_bookmark()
         end
     end
 
-    if string.len(vlpause_bookmark) > 0 then
-        return vlpause_bookmark
-    else
-        return temp_vlpause_bookmark
-    end
+    return string.len(vlpause_bookmark) > 0 and vlpause_bookmark or temp_vlpause_bookmark
 end
 
 function log_info(message)
