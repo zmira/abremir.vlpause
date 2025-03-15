@@ -221,10 +221,12 @@ function looper()
         
                 if not calculated_number_of_intermissions then
                     calculated_number_of_intermissions = get_calculated_number_of_intermissions()
+                    log_info("calculated number of intermissions: " .. tostring(calculated_number_of_intermissions))
                 end
         
                 if not auto_apply_calculated_intermissions then
                     auto_apply_calculated_intermissions = get_auto_apply_calculated_intermissions(bookmark)
+                    log_info("auto-apply calculated # of intermissions: " .. tostring(auto_apply_calculated_intermissions))
                 end
 
                 local number_of_intermissions = auto_apply_calculated_intermissions and calculated_number_of_intermissions or manual_number_of_intermissions
@@ -232,11 +234,13 @@ function looper()
                 if display_intermission_config then
                     vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_calculated_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 3*1000000) -- display for 3 seconds
                     display_intermission_config = false
+                    log_info("actual number of intermissions: " .. tostring(number_of_intermissions))
                 end
 
                 if number_of_intermissions ~= 0 then
                     if #intermission_positions_map == 0 then
                         intermission_positions_map = get_intermission_positions_map(number_of_intermissions)
+                        log_info("intermission positions map: " .. dump(intermission_positions_map))
                     end
 
                     local input = vlc.object.input()
