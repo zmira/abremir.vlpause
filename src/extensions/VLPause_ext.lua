@@ -195,7 +195,7 @@ end
 
 function add_copyright_to_vlpause_dialog(column, row, hspan, vspan)
     vlpause_dialog:add_label("", column, row, hspan, vspan)
-    vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024 " .. descriptor().author, column, row + 2, hspan, vspan)
+    vlpause_dialog:add_label(descriptor().title .. " v" .. descriptor().version .. " Copyright (c) 2024-" .. os.date("%Y") .. " " .. descriptor().author, column, row + 2, hspan, vspan)
 end
 
 function get_suggested_number_of_intermissions()
