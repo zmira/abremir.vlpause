@@ -206,15 +206,11 @@ function get_calculated_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local calculated_number_of_intermissions
 
-    if duration < 4500 then -- 4500 = 1.25h * 60 * 60
-        calculated_number_of_intermissions = 0
-    else
-        calculated_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
-    end
-
-    return calculated_number_of_intermissions
+    -- if duration is less than 1h15m (4500 = 1.25h * 60 * 60)
+    -- then use 0 else subtract 1h15m from the duration and
+    -- convert to hours (3600 = 1h * 60 * 60), round up to nearest integer
+    return duration < 4500 and 0 or math.ceil((duration - 4500) / 3600)
 end
 
 function get_formatted_duration()
@@ -272,11 +268,7 @@ function get_vlpause_bookmark()
         end
     end
 
-    if string.len(vlpause_bookmark) > 0 then
-        return vlpause_bookmark
-    else
-        return temp_vlpause_bookmark
-    end
+    return string.len(vlpause_bookmark) > 0 and vlpause_bookmark or temp_vlpause_bookmark
 end
 
 function log_info(message)

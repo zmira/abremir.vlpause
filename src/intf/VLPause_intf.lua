@@ -50,11 +50,7 @@ function get_vlpause_bookmark()
         end
     end
 
-    if string.len(vlpause_bookmark) > 0 then
-        return vlpause_bookmark
-    else
-        return temp_vlpause_bookmark
-    end
+    return string.len(vlpause_bookmark) > 0 and vlpause_bookmark or temp_vlpause_bookmark
 end
 
 -- from lua-users wiki - String Recipies [http://lua-users.org/wiki/StringRecipes]
@@ -91,13 +87,8 @@ function get_saved_number_of_intermissions(bookmark)
     local vlpause_configuration = get_vlpause_configuration(bookmark)
 
     local splitter_position = string.find(vlpause_configuration, ":")
-    if splitter_position then
-        number_of_intermissions = string.sub(vlpause_configuration, 1, splitter_position - 1)
-    else
-        number_of_intermissions = vlpause_configuration
-    end
 
-    return tonumber(number_of_intermissions)
+    return tonumber(splitter_position and string.sub(vlpause_configuration, 1, splitter_position - 1) or vlpause_configuration)
 end
 
 function get_auto_apply_calculated_intermissions(bookmark)
@@ -156,15 +147,11 @@ function get_calculated_number_of_intermissions()
     end
 
     local duration = item:duration() -- in seconds
-    local calculated_number_of_intermissions
 
-    if duration < 4500 then -- 4500 = 1.25h * 60 * 60
-        calculated_number_of_intermissions = 0
-    else
-        calculated_number_of_intermissions = math.ceil((duration - 4500) / 3600) -- subtract 1.25h and convert to hours, round up to nearest integer
-    end
-
-    return calculated_number_of_intermissions
+    -- if duration is less than 1h15m (4500 = 1.25h * 60 * 60)
+    -- then use 0 else subtract 1h15m from the duration and
+    -- convert to hours (3600 = 1h * 60 * 60), round up to nearest integer
+    return duration < 4500 and 0 or math.ceil((duration - 4500) / 3600)
 end
 
 function looper()
