@@ -1,12 +1,25 @@
-# VLPause - intermission for VLC
+# VLPause for VLC
 
 ![VLPause](./assets/VLPause.webp)
 
-Automatically pause what you are watching halfway through play.
+Automatic pause of video being played.
 
 ## Description
 
-This Lua extension for VLC allows the currently playing video to automatically pause midway through, with a `-- INTERMISSION --` message on screen.
+This Lua extension for VLC allows the currently playing video to automatically pause a number of times, with a `-- INTERMISSION --` message on screen.
+
+The number of times the video will pause for intermission can be calculated or manually entered. This is defined in the VLPause configuration window.
+
+![VLPause configuration](./assets/VLPause_Configuration.png)
+
+* **Total time**: the total time of the current video
+* **Calculated # of intermissions**: the calculated number of intermissions for the currently playing video
+  * will be re-calculated on every start of play
+  * the calculated number of intermissions will be (this is a simple algorithm that fits my needs, no science behind this!)
+    * for videos less than 1h15m, 0 intermissions
+    * otherwise, number of hours in `duration - 1h15m` plus 1
+* **Auto-apply calculated # of intermissions**: when checked, only the calculated number of intermissions will always be used (disregarding the value entered in `# of intermissions`)
+* **\# of intermissions**: number of intermissions manually entered (will only be used if the aut-apply checkbox is not checked)
 
 ## Installation
 
