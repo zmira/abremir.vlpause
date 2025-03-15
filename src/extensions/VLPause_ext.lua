@@ -47,7 +47,7 @@ end
 function activate()
     os.setlocale("C", "all") -- fixes numeric locale issue on Mac
 
-    local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
+    local _, VLC_luaintf, _, luaintf_index = get_vlc_intf_settings()
 
     if not luaintf_index or VLC_luaintf ~= intf_tag then
         trigger_menu(2)
@@ -85,7 +85,7 @@ function initialize_gui_intf()
     vlpause_dialog:add_button("Save", click_save_settings, 3, 3, 1, 2)
     vlpause_dialog:add_button("Cancel", click_cancel_settings, 4, 3, 1, 2)
 
-    local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
+    local _, VLC_luaintf, _, luaintf_index = get_vlc_intf_settings()
     lb_message = vlpause_dialog:add_label("Current status: " .. (luaintf_index and "ENABLED" or "DISABLED") .. " " .. tostring(VLC_luaintf), 1, 5, 4, 2)
 
     add_copyright_to_vlpause_dialog(1, 7, 4, 2)
@@ -94,7 +94,7 @@ function initialize_gui_intf()
 end
 
 function click_save_settings()
-    local VLC_extraintf, VLC_luaintf, intf_table, luaintf_index = get_vlc_intf_settings()
+    local _, _, intf_table, luaintf_index = get_vlc_intf_settings()
 
     if enable_extraintf:get_checked() then
         if not luaintf_index then

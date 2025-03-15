@@ -65,16 +65,16 @@ end
 -- from https://stackoverflow.com/a/27028488/552219
 function dump(o)
     if type(o) == 'table' then
-       local s = '{ '
-       for k, v in pairs(o) do
-          if type(k) ~= 'number' then
-            k = '"'..k..'"'
+        local s = '{ '
+        for k, v in pairs(o) do
+            if type(k) ~= 'number' then
+                k = '"'..k..'"'
+            end
+            s = s .. '['..k..'] = ' .. dump(v) .. ','
         end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
+        return s .. '} '
     else
-       return tostring(o)
+        return tostring(o)
     end
  end
 
