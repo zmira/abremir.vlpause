@@ -20,6 +20,7 @@ The number of times the video will pause for intermission can be calculated or m
     * otherwise, number of hours in `duration - 1h15m` plus 1
 * **Auto-apply calculated # of intermissions**: when checked, only the calculated number of intermissions will always be used (disregarding the value entered in `# of intermissions`)
 * **\# of intermissions**: number of intermissions manually entered (will only be used if the aut-apply checkbox is not checked)
+* **Intermission message**: message to be displayed on intermission
 
 ## Installation
 
@@ -46,6 +47,8 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
+* 0.7
+  * allow customization of intermission message
 * 0.6
   * replace static dropdown to select the number of intermissions with text input to allow manual entry
 * 0.5
@@ -53,13 +56,16 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
   * calculate suggested number of intermissions instead of relying on a static mapping table
   * refactor loop function to re-calculate variables when input URI changes
   * display number of planned intermissions on start of play
-* 0.4 - allow automatic skip intermission if suggested number of intermissions is zero
+* 0.4
+  * allow automatic skip intermission if suggested number of intermissions is zero [obsolete v0.5]
 * 0.3
-  * allows selection of number of intermissions, up to 5 equal length chunks
+  * allows selection of number of intermissions, up to 5 equal length chunks [obsolete v0.6]
   * add suggested number of intermissions based on duration of input
   * other cosmetic changes
-* 0.2 - fix issue when running on a brand new install of vlc
-* 0.1 - initial version with pausing only at 50% duration of playing item
+* 0.2
+  * fix issue when running on a brand new install of vlc
+* 0.1
+  * initial version with pausing only at 50% duration of playing item [obsolete v0.3]
 
 ## Acknowledgements
 
@@ -70,5 +76,7 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 * [Time v3.2](https://addons.videolan.org/p/1154032/) (c) lubozle
 * lua-users wiki - [String Recipes](http://lua-users.org/wiki/StringRecipes)
 * [How to dump a table to console?](https://stackoverflow.com/a/27028488/552219)
+* [LUA script](https://luascripts.com/)
 * [Lua compiler](https://onecompiler.com/lua)
+* [Run  lua in the browser](https://glot.io/new/lua)
 * [Big Buck Bunny](https://www.bigbuckbunny.org) (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
