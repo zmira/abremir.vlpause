@@ -20,6 +20,7 @@ The number of times the video will pause for intermission can be calculated or m
     * otherwise, number of hours in `duration - 1h15m` plus 1
 * **Auto-apply calculated # of intermissions**: when checked, only the calculated number of intermissions will always be used (disregarding the value entered in `# of intermissions`)
 * **\# of intermissions**: number of intermissions manually entered (will only be used if the aut-apply checkbox is not checked)
+* **Intermission message**: message to be displayed on intermission
 
 ## Installation
 
@@ -46,6 +47,8 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
+* 0.7
+  * allow customization of intermission message
 * 0.6
   * replace static dropdown to select the number of intermissions with text input to allow manual entry
 * 0.5
@@ -73,5 +76,7 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 * [Time v3.2](https://addons.videolan.org/p/1154032/) (c) lubozle
 * lua-users wiki - [String Recipes](http://lua-users.org/wiki/StringRecipes)
 * [How to dump a table to console?](https://stackoverflow.com/a/27028488/552219)
+* [LUA script](https://luascripts.com/)
 * [Lua compiler](https://onecompiler.com/lua)
+* [Run  lua in the browser](https://glot.io/new/lua)
 * [Big Buck Bunny](https://www.bigbuckbunny.org) (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
