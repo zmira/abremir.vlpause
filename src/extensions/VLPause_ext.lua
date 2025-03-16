@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.6 ------------
+--[[-------------- VLPause v0.7 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
@@ -31,7 +31,7 @@ local intf_tag = "VLPause_intf"
 function descriptor()
     return {
         title = "VLPause";
-        version = "0.6";
+        version = "0.7";
         author = "José Mira [abremir]";
         url = 'https://github.com/zmira/abremir.vlpause';
         description = [[
