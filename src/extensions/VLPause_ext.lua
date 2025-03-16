@@ -115,6 +115,15 @@ function click_cancel_settings()
     trigger_menu(1)
 end
 
+-- from https://luascripts.com/lua-strings
+function split_string(input, separator)
+    local tbl = {}
+    for str in string.gmatch(input, "([^" .. separator .. "]+)") do
+        table.insert(tbl, str)
+    end
+    return tbl
+end
+
 function get_vlc_intf_settings()
     local VLC_extraintf = vlc.config.get("extraintf") -- enabled VLC interfaces
     local VLC_luaintf = vlc.config.get("lua-intf") -- Lua Interface
@@ -132,43 +141,23 @@ function get_vlc_intf_settings()
     return VLC_extraintf, VLC_luaintf, intf_table, luaintf_index
 end
 
-function split_string(s, d)
-    local t = {}
-    local i = 1
-    local ss, j, k
-    local b = true
-    while b do
-        j,k = string.find(s,d,i)
-        if j then
-            ss = string.sub(s,i,j-1)
-            i = k+1
-        else
-            ss = string.sub(s,i)
-            b = false
-        end
-        table.insert(t, ss)
-    end
-    return t
-end
-
 function initialize_gui()
-    local saved_number_of_intermissions = nil
-    local auto_apply_calculated_intermissions_option = false
-    local bookmark = get_vlpause_bookmark()
     local string_to_boolean = { ["true"] = true, ["false"] = false }
+    local saved_number_of_intermissions = nil
+    local saved_auto_apply_calculated_intermissions = false
+    local saved_intermission_message = nil
+
+    local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
         local bookmark_value = vlc.config.get(bookmark) or ""
         if starts_with(bookmark_value, "VLPAUSE=") then
             local vlpause_configuration = string.sub(bookmark_value, string.len("VLPAUSE=") + 1)
-            local splitter_position = string.find(vlpause_configuration, ":")
+            local vlpause_configuration_table = split_string(vlpause_configuration, ":")
 
-            if splitter_position then
-                saved_number_of_intermissions = string.sub(vlpause_configuration, 1, splitter_position - 1)
-                auto_apply_calculated_intermissions_option = string_to_boolean[string.sub(vlpause_configuration, splitter_position + 1)]
-            else
-                saved_number_of_intermissions = vlpause_configuration
-            end
+            saved_number_of_intermissions = #vlpause_configuration_table > 0 and vlpause_configuration_table[1] or ""
+            saved_auto_apply_calculated_intermissions = #vlpause_configuration_table > 1 and string_to_boolean[vlpause_configuration_table[2]] or false
+            saved_intermission_message = #vlpause_configuration_table > 2 and vlpause_configuration_table[3] or "INTERMISSION"
         end
     end
 
@@ -180,15 +169,18 @@ function initialize_gui()
     vlpause_dialog:add_label("Calculated # of intermissions:", 1, 3, 4, 2)
     vlpause_dialog:add_label(get_calculated_number_of_intermissions(), 5, 3, 4, 2)
 
-    auto_apply_calculated_intermissions = vlpause_dialog:add_check_box("Auto-apply calculated # of intermissions", auto_apply_calculated_intermissions_option, 1, 5, 8, 2)
+    auto_apply_calculated_intermissions_checkbox = vlpause_dialog:add_check_box("Auto-apply calculated # of intermissions", saved_auto_apply_calculated_intermissions, 1, 5, 8, 2)
 
     vlpause_dialog:add_label("# of intermissions:", 1, 7, 4, 2)
-    vlpause_text_input = vlpause_dialog:add_text_input(saved_number_of_intermissions or "", 5, 7, 4, 2)
+    vlpause_number_of_intermissions_textbox = vlpause_dialog:add_text_input(saved_number_of_intermissions, 5, 7, 4, 2)
 
-    vlpause_dialog:add_button("Apply", click_apply, 5, 9, 2, 2)
-    vlpause_dialog:add_button("Cancel", click_cancel, 7, 9, 2, 2)
+    vlpause_dialog:add_label("Intermission message:", 1, 9, 4, 2)
+    vlpause_intermission_message_textbox = vlpause_dialog:add_text_input(saved_intermission_message, 5, 9, 4, 2)
 
-    add_copyright_to_vlpause_dialog(1, 11, 8, 2)
+    vlpause_dialog:add_button("Apply", click_apply, 5, 11, 2, 2)
+    vlpause_dialog:add_button("Cancel", click_cancel, 7, 11, 2, 2)
+
+    add_copyright_to_vlpause_dialog(1, 13, 8, 2)
 
     vlpause_dialog:show()
 end
@@ -234,17 +226,25 @@ function click_cancel()
 end
 
 function click_apply()
-    local manual_number_of_intermissions = tonumber(vlpause_text_input:get_text(), 10)
+    local manual_number_of_intermissions = tonumber(vlpause_number_of_intermissions_textbox:get_text(), 10)
+    local intermission_message = vlpause_intermission_message_textbox:get_text()
 
     if manual_number_of_intermissions == nil or manual_number_of_intermissions < 0 then
         manual_number_of_intermissions = 0
-        vlpause_text_input:set_text("0")
+        vlpause_number_of_intermissions_textbox:set_text("0")
+    end
+
+    if intermission_message == nil then
+        intermission_message = "INTERMISSION"
+    elseif string.find(intermission_message, ":") ~= nil then
+        intermission_message = string.gsub(intermission_message, ":", "-")
+        vlpause_intermission_message_textbox:set_text(intermission_message)
     end
 
     local bookmark = get_vlpause_bookmark()
 
     if string.len(bookmark or "") > 0 then
-        vlc.config.set(bookmark, "VLPAUSE=" .. manual_number_of_intermissions .. ":" .. tostring(auto_apply_calculated_intermissions:get_checked()))
+        vlc.config.set(bookmark, "VLPAUSE=" .. manual_number_of_intermissions .. ":" .. tostring(auto_apply_calculated_intermissions_checkbox:get_checked()) .. ":" .. intermission_message)
     end
 end
 
