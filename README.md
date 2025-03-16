@@ -53,13 +53,16 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
   * calculate suggested number of intermissions instead of relying on a static mapping table
   * refactor loop function to re-calculate variables when input URI changes
   * display number of planned intermissions on start of play
-* 0.4 - allow automatic skip intermission if suggested number of intermissions is zero
+* 0.4
+  * allow automatic skip intermission if suggested number of intermissions is zero [obsolete v0.5]
 * 0.3
-  * allows selection of number of intermissions, up to 5 equal length chunks
+  * allows selection of number of intermissions, up to 5 equal length chunks [obsolete v0.6]
   * add suggested number of intermissions based on duration of input
   * other cosmetic changes
-* 0.2 - fix issue when running on a brand new install of vlc
-* 0.1 - initial version with pausing only at 50% duration of playing item
+* 0.2
+  * fix issue when running on a brand new install of vlc
+* 0.1
+  * initial version with pausing only at 50% duration of playing item [obsolete v0.3]
 
 ## Acknowledgements
 
