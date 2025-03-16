@@ -236,7 +236,7 @@ function looper()
                             .. ", play time [in seconds] = " .. dump(play_time_in_seconds)
                             .. ", intermission position map = " .. dump(intermission_positions_map)
                         )
-                        vlc.osd.message("-- INTERMISSION --", 1, "center", 5*1000000) -- display for 5 seconds
+                        vlc.osd.message("-- " .. (#vlpause_configuration_table > 2 and vlpause_configuration_table[3] or "INTERMISSION") .. " --", 1, "center", 5*1000000) -- display for 5 seconds
                         vlc.playlist.pause()
                     end
                 end
