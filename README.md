@@ -24,7 +24,7 @@ The number of times the video will pause for intermission can be calculated or m
 
 ## Installation
 
-Copy the [VLPause_ext.lua](./src/VLPause_ext.lua) and [VLPause_intf.lua](./src/VLPause_intf.lua) files to the following folders (depends on your OS) :
+Copy the [VLPause_ext.lua](./source/VLPause_ext.lua) and [VLPause_intf.lua](./source/VLPause_intf.lua) files to the following folders (depends on your OS) :
 
 * `VLPause_ext.lua` (installation directory `lua/extensions`)
   * Windows (all users): %ProgramFiles%\VideoLAN\VLC\lua\extensions\
