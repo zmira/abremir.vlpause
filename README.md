@@ -47,6 +47,8 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
+* 0.8
+  * always display intermission message at start, even if rewound to the start
 * 0.7
   * allow customization of intermission message
 * 0.6
