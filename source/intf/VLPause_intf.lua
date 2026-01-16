@@ -1,4 +1,4 @@
---[[-------------- VLPause v0.7 ------------
+--[[-------------- VLPause v0.8 ------------
 "VLPause_ext.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
 Requires "VLPause_ext.lua" > Put the VLC Extension Lua script file in \lua\extensions\ folder
@@ -206,8 +206,12 @@ function looper()
 
                 local number_of_intermissions = auto_apply_calculated_intermissions and calculated_number_of_intermissions or manual_number_of_intermissions
 
-                if display_intermission_config then
-                    vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_calculated_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 3*1000000) -- display for 3 seconds
+                local input = vlc.object.input()
+                local play_time = vlc.var.get(input, "time")
+                local play_time_in_seconds = math.floor(vlc.var.get(input, "time") / 1000 / 1000) -- in seconds
+
+                if display_intermission_config or play_time_in_seconds == 0 then
+                    vlc.osd.message("=> " .. number_of_intermissions .. " intermissions [" .. (auto_apply_calculated_intermissions and "AUTO" or "MANUAL") .. "]", 1, "top-left", 4*1000000) -- display for 3 seconds
                     display_intermission_config = false
                     log_info("number of intermissions: " .. tostring(number_of_intermissions))
                 end
@@ -217,10 +221,6 @@ function looper()
                         intermission_positions_map = get_intermission_positions_map(number_of_intermissions)
                         log_info("intermission positions map: " .. dump(intermission_positions_map))
                     end
-
-                    local input = vlc.object.input()
-                    local play_time = vlc.var.get(input, "time")
-                    local play_time_in_seconds = math.floor(vlc.var.get(input, "time") / 1000 / 1000) -- in seconds
 
                     if current_intermission_time ~= nil
                         and current_intermission_time ~= play_time_in_seconds then
