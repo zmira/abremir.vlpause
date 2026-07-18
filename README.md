@@ -1,6 +1,6 @@
-# VLPause for VLC
+# abremir.VLPause for VLC
 
-![VLPause](./assets/VLPause.webp)
+![abremir.VLPause](./assets/abremir.VLPause.webp)
 
 Automatic pause of video being played.
 
@@ -10,7 +10,7 @@ This Lua extension for VLC allows the currently playing video to automatically p
 
 The number of times the video will pause for intermission can be calculated or manually entered. This is defined in the VLPause configuration window.
 
-![VLPause configuration](./assets/VLPause_Configuration.png)
+![VLPause configuration](./assets/abremir.VLPause_Configuration.png)
 
 * **Total time**: the total time of the current video
 * **Calculated # of intermissions**: the calculated number of intermissions for the currently playing video
@@ -47,27 +47,27 @@ Or, take the zip file in the release assets and unzip into the Lua directory.
 
 ## Changelog
 
-* 0.8
+* 0.8.0
   * always display intermission message at start, even if rewound to the start
-* 0.7
+* 0.7.0
   * allow customization of intermission message
-* 0.6
+* 0.6.0
   * replace static dropdown to select the number of intermissions with text input to allow manual entry
-* 0.5
+* 0.5.0
   * replace "automatic skip intermission if suggested is zero" with "auto-apply suggested number of intermissions"
   * calculate suggested number of intermissions instead of relying on a static mapping table
   * refactor loop function to re-calculate variables when input URI changes
   * display number of planned intermissions on start of play
-* 0.4
-  * allow automatic skip intermission if suggested number of intermissions is zero [obsolete v0.5]
-* 0.3
-  * allows selection of number of intermissions, up to 5 equal length chunks [obsolete v0.6]
+* 0.4.0
+  * ~~allow automatic skip intermission if suggested number of intermissions is zero~~ [v0.5.0]
+* 0.3.0
+  * ~~allows selection of number of intermissions, up to 5 equal length chunks~~ [v0.6.0]
   * add suggested number of intermissions based on duration of input
   * other cosmetic changes
-* 0.2
+* 0.2.0
   * fix issue when running on a brand new install of vlc
-* 0.1
-  * initial version with pausing only at 50% duration of playing item [obsolete v0.3]
+* 0.1.0
+  * ~~initial version with pausing only at 50% duration of playing item~~ [v0.3.0]
 
 ## Acknowledgements
 
